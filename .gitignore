@@ -22,7 +22,6 @@ config.log
 config.status
 configure
 libtool
-Makefile
 Makefile.in
 
 # Build inside border router
