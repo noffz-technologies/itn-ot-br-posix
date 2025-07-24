@@ -37,6 +37,8 @@
 
 #############################################################################
 
+DESTDIR ?= /
+
 LIBVERS = 1
 
 COREDIR = ../mDNSCore
@@ -135,7 +137,7 @@ else
 
 ifeq ($(os),freebsd)
 # If not already defined, set LOCALBASE to /usr/local
-LOCALBASE?=/usr/local
+LOCALBASE?=$(DESTDIR)/usr/local
 INSTBASE=$(LOCALBASE)
 CFLAGS_OS = -DHAVE_IPV6
 # FreeBSD 4 requires threaded code to be compiled and linked using the "-pthread" option,
@@ -185,12 +187,12 @@ NSSLIBNAME  := libnss_mdns
 NSSVERSION  := 0.2
 NSSLIBFILE  := $(NSSLIBNAME)-$(NSSVERSION).so
 NSSLINKNAME := $(NSSLIBNAME).so.2
-NSSINSTPATH := /lib
+NSSINSTPATH := $(DESTDIR)/lib
 
 # If not otherwise defined, we install into /usr/lib and /usr/include
 # and our startup script is called mdns (e.g. /etc/init.d/mdns)
-ETCBASE?=/etc
-INSTBASE?=/usr
+ETCBASE?=$(DESTDIR)/etc
+INSTBASE?=$(DESTDIR)/usr
 STARTUPSCRIPTNAME?=mdns
 
 ifeq ($(HAVE_IPV6),1)
@@ -203,25 +205,25 @@ endif
 
 # If directory /usr/share/man exists, then we install man pages into that, else /usr/man
 ifeq ($(wildcard /usr/share/man), /usr/share/man)
-MANPATH := /usr/share/man
+MANPATH := $(DESTDIR)/usr/share/man
 else
-MANPATH := /usr/man
+MANPATH := $(DESTDIR)/usr/man
 endif
 
 # If directories /etc/init.d/rc*.d exist, then we install into that (Suse)
 ifeq ($(wildcard /etc/init.d/rc2.d/), /etc/init.d/rc2.d/)
-STARTUPSCRIPTDIR = /etc/init.d
-RUNLEVELSCRIPTSDIR = /etc/init.d
+STARTUPSCRIPTDIR = $(DESTDIR)/etc/init.d
+RUNLEVELSCRIPTSDIR = $(DESTDIR)/etc/init.d
 else
 # Else if directory /etc/rc.d/init.d/ exists, then we install into that (old Linux)
 ifeq ($(wildcard /etc/rc.d/init.d/), /etc/rc.d/init.d/)
-STARTUPSCRIPTDIR = /etc/rc.d/init.d
-RUNLEVELSCRIPTSDIR = /etc/rc.d
+STARTUPSCRIPTDIR = $(DESTDIR)/etc/rc.d/init.d
+RUNLEVELSCRIPTSDIR = $(DESTDIR)/etc/rc.d
 else
 # Else if directory /etc/init.d/ exists, then we install into that (new Linux)
 ifeq ($(wildcard /etc/init.d/), /etc/init.d/)
-STARTUPSCRIPTDIR = /etc/init.d
-RUNLEVELSCRIPTSDIR = /etc
+STARTUPSCRIPTDIR = $(DESTDIR)/etc/init.d
+RUNLEVELSCRIPTSDIR = $(DESTDIR)/etc
 else
 # Else install into /etc/rc.d/ (*BSD)
 STARTUPSCRIPTDIR = $(INSTBASE)/etc/rc.d
@@ -311,16 +313,18 @@ InstalledManPages: $(MANPATH)/man8/mdnsd.8
 InstalledClients: $(INSTBASE)/bin/dns-sd
 	@echo $+ " installed"
 
-InstalledNSS: $(NSSINSTPATH)/$(NSSLINKNAME) /etc/nss_mdns.conf $(MANPATH)/man5/nss_mdns.conf.5 $(MANPATH)/man8/libnss_mdns.8
+InstalledNSS: $(NSSINSTPATH)/$(NSSLINKNAME) $(DESTDIR)/etc/nss_mdns.conf $(MANPATH)/man5/nss_mdns.conf.5 $(MANPATH)/man8/libnss_mdns.8
 	@echo $+ " installed"
 
 # Note: If daemon already installed, we make sure it's stopped before overwriting it
 $(INSTBASE)/sbin/mdnsd: $(BUILDDIR)/mdnsd $(STARTUPSCRIPTDIR)/$(STARTUPSCRIPTNAME)
 	if test -x $@; then $(STARTUPSCRIPTDIR)/$(STARTUPSCRIPTNAME) stop; fi
+	@mkdir -p $(INSTBASE)/sbin
 	$(CP) $< $@
 	$(STARTUPSCRIPTDIR)/$(STARTUPSCRIPTNAME) start
 
 $(INSTBASE)/lib/libdns_sd.$(LDSUFFIX).$(LIBVERS): $(BUILDDIR)/libdns_sd.$(LDSUFFIX)
+	@mkdir -p $(INSTBASE)/lib/
 	$(CP) $< $@
 	$(LN) $@ $(INSTBASE)/lib/libdns_sd.$(LDSUFFIX)
 ifdef LDCONFIG
@@ -329,9 +333,12 @@ ifdef LDCONFIG
 endif
 
 $(INSTBASE)/include/dns_sd.h: $(SHAREDDIR)/dns_sd.h
+	@mkdir -p $(INSTBASE)/include/
 	$(CP) $< $@
 
-$(STARTUPSCRIPTDIR)/$(STARTUPSCRIPTNAME): mdnsd.sh $(STARTUPSCRIPTDIR)
+$(STARTUPSCRIPTDIR)/$(STARTUPSCRIPTNAME): mdnsd.sh 
+	@mkdir -p $(STARTUPSCRIPTDIR)
+	@mkdir -p $(RUNLEVELSCRIPTSDIR)
 	$(CP) $< $@
 	chmod ugo+x $@
 ifdef RUNLEVELSCRIPTSDIR
@@ -348,35 +355,42 @@ endif
 endif
 
 $(MANPATH)/man5/%.5: %.5
+	mkdir -p $(MANPATH)/man5
 	cp $< $@
 	chmod 444 $@
 
 $(MANPATH)/man8/%.8: %.8
+	mkdir -p $(MANPATH)/man8
 	cp $< $@
 	chmod 444 $@
 
 $(MANPATH)/man8/mdnsd.8: $(SHAREDDIR)/mDNSResponder.8
+	mkdir -p $(MANPATH)/man8
 	cp $< $@
 	chmod 444 $@
 
 $(INSTBASE)/bin/dns-sd: ../Clients/build/dns-sd
+	mkdir -p $(INSTBASE)/bin
 	$(CP) $< $@
 
 $(NSSINSTPATH)/$(NSSLINKNAME): $(NSSINSTPATH)/$(NSSLIBFILE)
+	mkdir -p $(NSSINSTPATH)
 	$(LN) $< $@
 	ldconfig
 
 $(NSSINSTPATH)/$(NSSLIBFILE): $(BUILDDIR)/$(NSSLIBFILE)
+	mkdir -p $(NSSINSTPATH)
 	$(CP) $< $@
 	chmod 444 $@
 
-/etc/nss_mdns.conf: nss_mdns.conf
+$(DESTDIR)/etc/nss_mdns.conf: nss_mdns.conf
+	mkdir -p $(DESTDIR)/etc
 	$(CP) $< $@
 	chmod 444 $@
 # Check the nsswitch.conf file.
 # If 'mdns' does not already appear on the "hosts:" line, then add it right before 'dns'
-	cp -f /etc/nsswitch.conf /etc/nsswitch.conf.pre-mdns
-	sed -e '/\bmdns\b/!s/^\(hosts:.*\)dns\(.*\)/\1mdns dns\2/' /etc/nsswitch.conf.pre-mdns > /etc/nsswitch.conf
+	cp -f $(DESTDIR)/etc/nsswitch.conf $(DESTDIR)/etc/nsswitch.conf.pre-mdns
+	sed -e '/\bmdns\b/!s/^\(hosts:.*\)dns\(.*\)/\1mdns dns\2/' $(DESTDIR)/etc/nsswitch.conf.pre-mdns > $(DESTDIR)/etc/nsswitch.conf
 
 #############################################################################
 
