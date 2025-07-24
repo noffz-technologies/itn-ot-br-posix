@@ -1,0 +1,36 @@
+#!/bin/bash
+
+DEFAULTFILE_PATH=$PWD/defaultfile
+OTBR_TOP_BUILDDIR=$PWD/build/otbr
+TMP_DIR="/tmp/otbr-rootfs"
+TAR_PATH="/shared/otbr-install.tar"
+
+local otbr_options=()
+
+if [[ ${OTBR_OPTIONS} ]]; then
+    read -r -a otbr_options <<<"${OTBR_OPTIONS}"
+fi
+
+otbr_options=(
+    "-DBUILD_TESTING=OFF"
+    "-DCMAKE_INSTALL_PREFIX=/usr"
+    "-DOTBR_DBUS=ON"
+    "-DOTBR_DNSSD_DISCOVERY_PROXY=ON"
+    "-DOTBR_INFRA_IF_NAME=${INFRA_IF_NAME}"
+    "-DOTBR_MDNS=${OTBR_MDNS:=mDNSResponder}"
+    # Force re-evaluation of version strings
+    "-DOTBR_VERSION="
+    "-DOT_PACKAGE_VERSION="
+    "${otbr_options[@]}"
+    "-DOT_FIREWALL=OFF" 
+    "-DOTBR_SRP_ADVERTISING_PROXY=ON"
+)
+
+(./script/cmake-build "${otbr_options[@]}" \
+    && cd "${OTBR_TOP_BUILDDIR}" \
+    && ninja \
+    && sudo DESTDIR="${TMP_DIR}" ninja install )
+
+cp $DEFAULTFILE_PATH ${TMP_DIR}/etc/default/otbr-agent
+
+tar cf "${TAR_PATH}" -C "${TMP_DIR}" .

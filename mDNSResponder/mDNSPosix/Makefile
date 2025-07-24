@@ -344,13 +344,15 @@ $(STARTUPSCRIPTDIR)/$(STARTUPSCRIPTNAME): mdnsd.sh
 ifdef RUNLEVELSCRIPTSDIR
 ifeq ($(wildcard $(RUNLEVELSCRIPTSDIR)/runlevels/default), $(RUNLEVELSCRIPTSDIR)/runlevels/default)
 	$(LN) $@ $(RUNLEVELSCRIPTSDIR)/runlevels/default/mdns
-else
-	$(LN) $@ $(RUNLEVELSCRIPTSDIR)/rc2.d/S52mdns
-	$(LN) $@ $(RUNLEVELSCRIPTSDIR)/rc3.d/S52mdns
-	$(LN) $@ $(RUNLEVELSCRIPTSDIR)/rc4.d/S52mdns
-	$(LN) $@ $(RUNLEVELSCRIPTSDIR)/rc5.d/S52mdns
-	$(LN) $@ $(RUNLEVELSCRIPTSDIR)/rc0.d/K16mdns
-	$(LN) $@ $(RUNLEVELSCRIPTSDIR)/rc6.d/K16mdns
+
+
+#else
+#	$(LN) $@ $(RUNLEVELSCRIPTSDIR)/rc2.d/S52mdns
+#	$(LN) $@ $(RUNLEVELSCRIPTSDIR)/rc3.d/S52mdns
+#	$(LN) $@ $(RUNLEVELSCRIPTSDIR)/rc4.d/S52mdns
+#	$(LN) $@ $(RUNLEVELSCRIPTSDIR)/rc5.d/S52mdns
+#	$(LN) $@ $(RUNLEVELSCRIPTSDIR)/rc0.d/K16mdns
+#	$(LN) $@ $(RUNLEVELSCRIPTSDIR)/rc6.d/K16mdns
 endif
 endif
 

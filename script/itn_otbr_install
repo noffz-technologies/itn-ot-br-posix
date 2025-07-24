@@ -1,0 +1,27 @@
+#!/bin/bash
+set -e
+
+# Directory containing files to install
+INSTALL_ARCHIVE="/shared/otbr-install.tar"
+MDNS_ARCHIVE="/shared/mdns-install.tar"
+
+echo "Installing OTBR from ${INSTALL_ARCHIVE}..."
+sudo tar --keep-directory-symlink --skip-old-files -xf "${INSTALL_ARCHIVE}" -C /
+
+echo "Installing mdns from ${MDNS_ARCHIVE}..."
+sudo tar --keep-directory-symlink --skip-old-files -xf "${MDNS_ARCHIVE}" -C /
+
+# Reload systemd
+if command -v systemctl >/dev/null 2>&1; then
+    echo "Reloading systemd daemon..."
+    systemctl daemon-reexec
+    systemctl daemon-reload
+
+    # Enable and start services
+    systemctl enable otbr-agent || true
+    systemctl start otbr-agent
+else
+    echo "WARNING: systemctl not found. Services will not start on boot."
+fi
+
+echo "OTBR installation complete."
