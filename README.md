@@ -2,6 +2,14 @@
 
 ---
 
+# NOFFZ Build instructions
+
+To be able to install OTBR on an ITN, you need to make 2 .tar files. They will contain the source code, and you can extract them into the root directory of an ITN docker image. 
+One tar file contains OTBR, the other contains mDNSResponder. 
+To build OTBR into a tar, you can run './script/itn_otbr_build'.
+To build mDNSResponder into a tar, run './mDNSResponder/mdns_build.sh'.
+
+
 # OpenThread Border Router
 
 A Thread Border Router connects a Thread network to other IP-based networks, such as Wi-Fi or Ethernet.
