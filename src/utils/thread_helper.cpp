@@ -498,6 +498,7 @@ void ThreadHelper::Attach(const std::string          &aNetworkName,
                           const std::vector<uint8_t> &aNetworkKey,
                           const std::vector<uint8_t> &aPSKc,
                           uint32_t                    aChannelMask,
+                          const std::vector<uint8_t> &aMeshLocalPrefix,
                           AttachHandler               aHandler)
 
 {
@@ -509,6 +510,7 @@ void ThreadHelper::Attach(const std::string          &aNetworkName,
     VerifyOrExit(aNetworkKey.empty() || aNetworkKey.size() == sizeof(dataset.mNetworkKey.m8),
                  error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aPSKc.empty() || aPSKc.size() == sizeof(dataset.mPskc.m8), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aMeshLocalPrefix.empty() || aMeshLocalPrefix.size() == sizeof(dataset.mMeshLocalPrefix.m8), error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aChannelMask != 0, error = OT_ERROR_INVALID_ARGS);
 
     SuccessOrExit(error = otDatasetCreateNewNetwork(mInstance, &dataset));
@@ -539,6 +541,11 @@ void ThreadHelper::Attach(const std::string          &aNetworkName,
     VerifyOrExit(dataset.mChannelMask != 0, otbrLogWarning("Invalid channel mask"), error = OT_ERROR_INVALID_ARGS);
 
     dataset.mChannel = RandomChannelFromChannelMask(dataset.mChannelMask);
+    
+    if (!aMeshLocalPrefix.empty())
+    {
+        memcpy(dataset.mMeshLocalPrefix.m8, &aMeshLocalPrefix[0], sizeof(dataset.mMeshLocalPrefix.m8));
+    }
 
     SuccessOrExit(error = otDatasetSetActive(mInstance, &dataset));
 
@@ -546,7 +553,6 @@ void ThreadHelper::Attach(const std::string          &aNetworkName,
     {
         SuccessOrExit(error = otIp6SetEnabled(mInstance, true));
     }
-
     SuccessOrExit(error = otThreadSetEnabled(mInstance, true));
     mAttachDelayMs = 0;
     mAttachHandler = aHandler;

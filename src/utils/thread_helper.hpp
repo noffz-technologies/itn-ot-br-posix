@@ -157,6 +157,7 @@ public:
                 const std::vector<uint8_t> &aNetworkKey,
                 const std::vector<uint8_t> &aPSKc,
                 uint32_t                    aChannelMask,
+                const std::vector<uint8_t> &aMeshLocalPrefix,
                 AttachHandler               aHandler);
 
     /**

@@ -6,10 +6,10 @@ INSTALL_ARCHIVE="/shared/otbr-install.tar"
 MDNS_ARCHIVE="/shared/mdns-install.tar"
 
 echo "Installing OTBR from ${INSTALL_ARCHIVE}..."
-sudo tar --keep-directory-symlink --skip-old-files -xf "${INSTALL_ARCHIVE}" -C /
+sudo tar --keep-directory-symlink -xf "${INSTALL_ARCHIVE}" -C /
 
-echo "Installing mdns from ${MDNS_ARCHIVE}..."
-sudo tar --keep-directory-symlink --skip-old-files -xf "${MDNS_ARCHIVE}" -C /
+#echo "Installing mdns from ${MDNS_ARCHIVE}..."
+#sudo tar --keep-directory-symlink --skip-old-files -xf "${MDNS_ARCHIVE}" -C /
 
 # Reload systemd
 if command -v systemctl >/dev/null 2>&1; then

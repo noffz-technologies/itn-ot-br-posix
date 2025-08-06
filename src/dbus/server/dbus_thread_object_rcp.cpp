@@ -432,8 +432,9 @@ void DBusThreadObjectRcp::AttachHandler(DBusRequest &aRequest)
     std::vector<uint8_t> networkKey;
     std::vector<uint8_t> pskc;
     uint32_t             channelMask;
+    std::vector<uint8_t> meshLocalPrefix;
 
-    auto args = std::tie(networkKey, panid, name, extPanId, pskc, channelMask);
+    auto args = std::tie(networkKey, panid, name, extPanId, pskc, channelMask, meshLocalPrefix);
 
     if (IsDBusMessageEmpty(*aRequest.GetMessage()))
     {
@@ -449,7 +450,7 @@ void DBusThreadObjectRcp::AttachHandler(DBusRequest &aRequest)
     }
     else
     {
-        threadHelper->Attach(name, panid, extPanId, networkKey, pskc, channelMask,
+        threadHelper->Attach(name, panid, extPanId, networkKey, pskc, channelMask, meshLocalPrefix,
                              [aRequest](otError aError, int64_t aAttachDelayMs) mutable {
                                  OT_UNUSED_VARIABLE(aAttachDelayMs);
 
