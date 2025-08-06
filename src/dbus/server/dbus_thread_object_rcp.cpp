@@ -155,6 +155,8 @@ otbrError DBusThreadObjectRcp::Init(void)
                    std::bind(&DBusThreadObjectRcp::RemoveExternalRouteHandler, this, _1));
     RegisterMethod(OTBR_DBUS_THREAD_INTERFACE, OTBR_DBUS_ATTACH_ALL_NODES_TO_METHOD,
                    std::bind(&DBusThreadObjectRcp::AttachAllNodesToHandler, this, _1));
+    RegisterMethod(OTBR_DBUS_THREAD_INTERFACE, OTBR_DBUS_IP_ADDRESSES_METHOD,
+                   std::bind(&DBusThreadObjectRcp::IpAddressesHandler, this, _1));
 #if OTBR_ENABLE_BORDER_AGENT
     RegisterMethod(OTBR_DBUS_THREAD_INTERFACE, OTBR_DBUS_UPDATE_VENDOR_MESHCOP_TXT_METHOD,
                    std::bind(&DBusThreadObjectRcp::UpdateMeshCopTxtHandler, this, _1));
@@ -473,6 +475,28 @@ void DBusThreadObjectRcp::AttachAllNodesToHandler(DBusRequest &aRequest)
     });
 
 exit:
+    if (error != OT_ERROR_NONE)
+    {
+        aRequest.ReplyOtResult(error);
+    }
+}
+
+void DBusThreadObjectRcp::IpAddressesHandler(DBusRequest &aRequest)
+{
+    otError              error = OT_ERROR_NONE;
+
+    mHost.GetThreadHelper()->IpAddresses([aRequest](otError error, std::vector<otIp6Address> addresses) mutable {
+        std::vector<std::vector<uint8_t>> ipv6List;
+        for(int i=0;i<(int)addresses.size();i++)
+        {
+            std::vector<uint8_t> ipv6Address;
+            ipv6Address.resize(sizeof(otIp6Address));
+            memcpy(ipv6Address.data(), &addresses[i], sizeof(otIp6Address));
+            ipv6List.push_back(ipv6Address);
+        }
+        aRequest.ReplyOtResult<std::vector<std::vector<uint8_t>>>(error, ipv6List);
+    });
+
     if (error != OT_ERROR_NONE)
     {
         aRequest.ReplyOtResult(error);

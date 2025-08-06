@@ -87,6 +87,7 @@ private:
     void EnergyScanHandler(DBusRequest &aRequest);
     void AttachHandler(DBusRequest &aRequest);
     void AttachAllNodesToHandler(DBusRequest &aRequest);
+    void IpAddressesHandler(DBusRequest &aRequest);
     void DetachHandler(DBusRequest &aRequest);
     void LeaveHandler(DBusRequest &aRequest);
     void FactoryResetHandler(DBusRequest &aRequest);

@@ -76,6 +76,7 @@ public:
     using EnergyScanHandler       = std::function<void(otError, const std::vector<otEnergyScanResult> &)>;
     using ResultHandler           = std::function<void(otError)>;
     using AttachHandler           = std::function<void(otError, int64_t)>;
+    using IpAddressesHandler      = std::function<void(otError, const std::vector<otIp6Address> &)>;
     using UpdateMeshCopTxtHandler = std::function<void(std::map<std::string, std::vector<uint8_t>>)>;
     using DatasetChangeHandler    = std::function<void(const otOperationalDatasetTlvs &)>;
 #if OTBR_ENABLE_DHCP6_PD
@@ -184,6 +185,8 @@ public:
      * @param[in] aHandler      The result handler.
      */
     void AttachAllNodesTo(const std::vector<uint8_t> &aDatasetTlvs, AttachHandler aHandler);
+
+    void IpAddresses(IpAddressesHandler aHandler);
 
     /**
      * This method resets the OpenThread stack.

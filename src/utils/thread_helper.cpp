@@ -782,6 +782,20 @@ exit:
     }
 }
 
+void ThreadHelper::IpAddresses(IpAddressesHandler aHandler)
+{
+    std::vector<otIp6Address> addresses;
+
+    const otNetifAddress *unicastAddrs = otIp6GetUnicastAddresses(mInstance);
+
+    for (const otNetifAddress *addr = unicastAddrs; addr; addr = addr->mNext)
+    { 
+        addresses.push_back(addr->mAddress);
+    }
+
+    aHandler(OT_ERROR_NONE, addresses);
+}
+
 void ThreadHelper::MgmtSetResponseHandler(otError aResult, void *aContext)
 {
     static_cast<ThreadHelper *>(aContext)->MgmtSetResponseHandler(aResult);
