@@ -2,8 +2,8 @@
 set -e
 
 # Directory containing files to install
-INSTALL_ARCHIVE="/shared/otbr-install.tar"
-MDNS_ARCHIVE="/shared/mdns-install.tar"
+INSTALL_ARCHIVE="../otbr-install.tar"
+MDNS_ARCHIVE="../mdns-install.tar"
 
 echo "Installing OTBR from ${INSTALL_ARCHIVE}..."
 sudo tar --keep-directory-symlink -xf "${INSTALL_ARCHIVE}" -C /

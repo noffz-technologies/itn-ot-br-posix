@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TAR_PATH=/shared/mdns-install.tar
+TAR_PATH=../mdns-install.tar
 TMP_DIR=/tmp/mdns-install
 
 cd mDNSPosix

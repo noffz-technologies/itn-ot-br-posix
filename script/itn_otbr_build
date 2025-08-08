@@ -3,7 +3,7 @@
 DEFAULTFILE_PATH=$PWD/defaultfile
 OTBR_TOP_BUILDDIR=$PWD/build/otbr
 TMP_DIR="/tmp/otbr-rootfs"
-TAR_PATH="/shared/otbr-install.tar"
+TAR_PATH="../otbr-install.tar"
 
 local otbr_options=()
 
