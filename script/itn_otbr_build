@@ -3,7 +3,7 @@
 DEFAULTFILE_PATH=$PWD/defaultfile
 OTBR_TOP_BUILDDIR=$PWD/build/otbr
 TMP_DIR="/tmp/otbr-rootfs"
-TAR_PATH="../otbr-install.tar"
+TAR_PATH=$PWD/otbr-install.tar
 
 local otbr_options=()
 
@@ -33,4 +33,5 @@ otbr_options=(
 
 cp $DEFAULTFILE_PATH ${TMP_DIR}/etc/default/otbr-agent
 
+echo "Creating tar..."
 tar cf "${TAR_PATH}" -C "${TMP_DIR}" .

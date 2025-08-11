@@ -47,6 +47,7 @@
 #include "common/types.hpp"
 #include "dbus/common/dbus_resources.hpp"
 #include "dbus/common/types.hpp"
+#include <openthread/link.h>
 
 namespace otbr {
 namespace DBus {
@@ -57,6 +58,7 @@ otbrError DBusMessageEncode(DBusMessageIter *aIter, const ActiveScanResult &aSca
 otbrError DBusMessageExtract(DBusMessageIter *aIter, ActiveScanResult &aScanResult);
 otbrError DBusMessageEncode(DBusMessageIter *aIter, const EnergyScanResult &aResult);
 otbrError DBusMessageExtract(DBusMessageIter *aIter, EnergyScanResult &aResult);
+otbrError DBusMessageEncode(DBusMessageIter *aIter, const PingStatistics &aResult);
 otbrError DBusMessageEncode(DBusMessageIter *aIter, const LinkModeConfig &aConfig);
 otbrError DBusMessageExtract(DBusMessageIter *aIter, LinkModeConfig &aConfig);
 otbrError DBusMessageEncode(DBusMessageIter *aIter, const Ip6Prefix &aPrefix);

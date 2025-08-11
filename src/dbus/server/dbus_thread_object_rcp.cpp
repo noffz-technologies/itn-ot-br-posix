@@ -157,6 +157,8 @@ otbrError DBusThreadObjectRcp::Init(void)
                    std::bind(&DBusThreadObjectRcp::AttachAllNodesToHandler, this, _1));
     RegisterMethod(OTBR_DBUS_THREAD_INTERFACE, OTBR_DBUS_IP_ADDRESSES_METHOD,
                    std::bind(&DBusThreadObjectRcp::IpAddressesHandler, this, _1));
+    RegisterMethod(OTBR_DBUS_THREAD_INTERFACE, OTBR_DBUS_PING_METHOD,
+                   std::bind(&DBusThreadObjectRcp::PingHandler, this, _1));
 #if OTBR_ENABLE_BORDER_AGENT
     RegisterMethod(OTBR_DBUS_THREAD_INTERFACE, OTBR_DBUS_UPDATE_VENDOR_MESHCOP_TXT_METHOD,
                    std::bind(&DBusThreadObjectRcp::UpdateMeshCopTxtHandler, this, _1));
@@ -497,6 +499,33 @@ void DBusThreadObjectRcp::IpAddressesHandler(DBusRequest &aRequest)
         aRequest.ReplyOtResult<std::vector<std::vector<uint8_t>>>(error, ipv6List);
     });
 
+    if (error != OT_ERROR_NONE)
+    {
+        aRequest.ReplyOtResult(error);
+    }
+}
+
+void DBusThreadObjectRcp::PingHandler(DBusRequest &aRequest)
+{    
+    otError error = OT_ERROR_NONE;
+    uint16_t Count;
+    std::vector<uint8_t> Destination;
+    uint16_t Size;
+    uint16_t Timeout;
+
+    auto args = std::tie(Count, Destination, Size, Timeout);
+
+    VerifyOrExit(DBusMessageToTuple(*aRequest.GetMessage(), args) == OTBR_ERROR_NONE, error = OT_ERROR_INVALID_ARGS);
+
+    mHost.GetThreadHelper()->Ping(Count, Destination, Size, Timeout,
+                             [aRequest](otError aError, otPingSenderStatistics aStats) mutable {
+                                 
+                                PingStatistics stats;
+                                std::memcpy(&stats, &aStats, sizeof(stats));
+                                aRequest.ReplyOtResult<PingStatistics>(aError,stats);
+                             });
+
+exit:
     if (error != OT_ERROR_NONE)
     {
         aRequest.ReplyOtResult(error);

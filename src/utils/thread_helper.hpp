@@ -48,6 +48,7 @@
 #include <openthread/ip6.h>
 #include <openthread/jam_detection.h>
 #include <openthread/joiner.h>
+#include <openthread/ping_sender.h>
 #include <openthread/netdata.h>
 #include <openthread/thread.h>
 #include "mdns/mdns.hpp"
@@ -77,6 +78,7 @@ public:
     using ResultHandler           = std::function<void(otError)>;
     using AttachHandler           = std::function<void(otError, int64_t)>;
     using IpAddressesHandler      = std::function<void(otError, const std::vector<otIp6Address> &)>;
+    using PingHandler             = std::function<void(otError, otPingSenderStatistics)>;
     using UpdateMeshCopTxtHandler = std::function<void(std::map<std::string, std::vector<uint8_t>>)>;
     using DatasetChangeHandler    = std::function<void(const otOperationalDatasetTlvs &)>;
 #if OTBR_ENABLE_DHCP6_PD
@@ -187,6 +189,10 @@ public:
     void AttachAllNodesTo(const std::vector<uint8_t> &aDatasetTlvs, AttachHandler aHandler);
 
     void IpAddresses(IpAddressesHandler aHandler);
+
+    void Ping(uint16_t aCount, std::vector<uint8_t> aDestination, uint16_t aSize, uint16_t aTimeout, PingHandler aHandler);
+    
+    static void PingStatisticsCallback(const otPingSenderStatistics *stats, void *context);
 
     /**
      * This method resets the OpenThread stack.

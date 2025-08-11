@@ -88,6 +88,7 @@ private:
     void AttachHandler(DBusRequest &aRequest);
     void AttachAllNodesToHandler(DBusRequest &aRequest);
     void IpAddressesHandler(DBusRequest &aRequest);
+    void PingHandler(DBusRequest &aRequest);
     void DetachHandler(DBusRequest &aRequest);
     void LeaveHandler(DBusRequest &aRequest);
     void FactoryResetHandler(DBusRequest &aRequest);

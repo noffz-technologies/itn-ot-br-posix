@@ -796,6 +796,52 @@ void ThreadHelper::IpAddresses(IpAddressesHandler aHandler)
     aHandler(OT_ERROR_NONE, addresses);
 }
 
+void ThreadHelper::PingStatisticsCallback(const otPingSenderStatistics *aStats, void *aContext)
+{
+    // Cast context back to your handler pointer
+    auto handler = static_cast<PingHandler *>(aContext);
+
+    if (handler)
+    {
+        // Call the stored handler
+        (*handler)(OT_ERROR_NONE, *aStats);
+        // Cleanup: delete handler pointer to avoid memory leak
+        delete handler;
+    }
+}
+void ThreadHelper::Ping(uint16_t aCount, std::vector<uint8_t> aDestination, uint16_t aSize, uint16_t aTimeout, PingHandler aHandler)
+{
+    otError error = OT_ERROR_NONE;
+    otPingSenderConfig config = {};
+    
+    if (aDestination.size() != sizeof(config.mDestination.mFields.m8))
+    {
+        aHandler(OT_ERROR_INVALID_ARGS, otPingSenderStatistics{}); // or appropriate error return
+        return;
+    }
+
+    config.mCount = aCount;
+    config.mSize = aSize;
+    config.mTimeout = aTimeout;
+    memcpy(&config.mDestination.mFields.m8, aDestination.data(), sizeof(config.mDestination.mFields.m8));
+
+    // Allocate the handler on heap; will be deleted in the callback
+    PingHandler *handlerPtr = new PingHandler(std::move(aHandler));
+
+    config.mStatisticsCallback = &PingStatisticsCallback;
+    config.mCallbackContext = handlerPtr;
+
+    error = otPingSenderPing(mInstance, &config);
+
+    if (error != OT_ERROR_NONE)
+    {
+        // If error, delete handler immediately and notify caller
+        delete handlerPtr;
+        aHandler(error, otPingSenderStatistics{});
+    }
+}
+
+
 void ThreadHelper::MgmtSetResponseHandler(otError aResult, void *aContext)
 {
     static_cast<ThreadHelper *>(aContext)->MgmtSetResponseHandler(aResult);

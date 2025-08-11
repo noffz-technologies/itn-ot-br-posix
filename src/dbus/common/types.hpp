@@ -78,6 +78,16 @@ struct EnergyScanResult
     int8_t  mMaxRssi; ///< The max RSSI (dBm)
 };
 
+struct PingStatistics
+{
+    uint16_t mSentCount;          ///< The number of ping requests already sent.
+    uint16_t mReceivedCount;      ///< The number of ping replies received.
+    uint32_t mTotalRoundTripTime; ///< The total round trip time of ping requests.
+    uint16_t mMinRoundTripTime;   ///< The min round trip time among ping requests.
+    uint16_t mMaxRoundTripTime;   ///< The max round trip time among ping requests.
+    bool     mIsMulticast;        ///< Whether this is a multicast ping request.
+};
+
 struct LinkModeConfig
 {
     bool mRxOnWhenIdle; ///< 1, if the sender has its receiver on when not transmitting. 0, otherwise.

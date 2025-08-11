@@ -142,6 +142,26 @@ exit:
     return error;
 }
 
+otbrError DBusMessageEncode(DBusMessageIter *aIter, const PingStatistics &aResult)
+{
+    DBusMessageIter sub;
+    otbrError       error = OTBR_ERROR_NONE;
+
+    VerifyOrExit(dbus_message_iter_open_container(aIter, DBUS_TYPE_STRUCT, nullptr, &sub), error = OTBR_ERROR_DBUS);
+
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mSentCount));
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mReceivedCount));
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mTotalRoundTripTime));
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mMinRoundTripTime));
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mMaxRoundTripTime));
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mIsMulticast));
+
+    VerifyOrExit(dbus_message_iter_close_container(aIter, &sub), error = OTBR_ERROR_DBUS);
+
+exit:
+    return error;
+}
+
 otbrError DBusMessageEncode(DBusMessageIter *aIter, const LinkModeConfig &aConfig)
 {
     otbrError       error = OTBR_ERROR_NONE;
