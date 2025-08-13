@@ -2,8 +2,8 @@
 set -e
 
 # Directory containing files to install
-INSTALL_ARCHIVE="../otbr-install.tar"
-MDNS_ARCHIVE="../mdns-install.tar"
+INSTALL_ARCHIVE=$PWD/otbr-install.tar
+MDNS_ARCHIVE=$PWD/mdns-install.tar
 
 echo "Installing OTBR from ${INSTALL_ARCHIVE}..."
 sudo tar --keep-directory-symlink -xf "${INSTALL_ARCHIVE}" -C /
@@ -19,7 +19,7 @@ if command -v systemctl >/dev/null 2>&1; then
 
     # Enable and start services
     systemctl enable otbr-agent || true
-    systemctl start otbr-agent
+    systemctl restart otbr-agent
 else
     echo "WARNING: systemctl not found. Services will not start on boot."
 fi

@@ -42,6 +42,7 @@
 #include <random>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include <openthread/border_routing.h>
 #include <openthread/instance.h>
@@ -79,6 +80,8 @@ public:
     using AttachHandler           = std::function<void(otError, int64_t)>;
     using IpAddressesHandler      = std::function<void(otError, const std::vector<otIp6Address> &)>;
     using PingHandler             = std::function<void(otError, otPingSenderStatistics)>;
+    using CommJoinerAddHandler    = std::function<void(otError)>;
+    using CommJoinerTableHandler  = std::function<void(otError, const std::vector<otJoinerInfo> &)>;
     using UpdateMeshCopTxtHandler = std::function<void(std::map<std::string, std::vector<uint8_t>>)>;
     using DatasetChangeHandler    = std::function<void(const otOperationalDatasetTlvs &)>;
 #if OTBR_ENABLE_DHCP6_PD
@@ -193,6 +196,10 @@ public:
     void Ping(uint16_t aCount, std::vector<uint8_t> aDestination, uint16_t aSize, uint16_t aTimeout, PingHandler aHandler);
     
     static void PingStatisticsCallback(const otPingSenderStatistics *stats, void *context);
+    
+    void CommissionerJoinerAdd(std::string aPskd, uint64_t aAddress, uint32_t aTimeout, CommJoinerAddHandler aHandler);
+    
+    void CommissionerJoinerTable(CommJoinerTableHandler aHandler);
 
     /**
      * This method resets the OpenThread stack.

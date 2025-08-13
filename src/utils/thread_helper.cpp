@@ -840,6 +840,36 @@ void ThreadHelper::Ping(uint16_t aCount, std::vector<uint8_t> aDestination, uint
         aHandler(error, otPingSenderStatistics{});
     }
 }
+void ThreadHelper::CommissionerJoinerAdd(std::string aPskd, uint64_t aAddress, uint32_t aTimeout, CommJoinerAddHandler aHandler)
+{
+    otError error = OT_ERROR_NONE;
+    otExtAddress address;
+    otExtAddress *addressptr = nullptr;
+    if(aAddress != 0)
+    {
+        memcpy(&address.m8, &aAddress, sizeof(aAddress));
+        std::reverse(address.m8, address.m8 + sizeof(aAddress));
+        addressptr = &address;
+    }
+
+    error = otCommissionerAddJoiner(mInstance, addressptr, aPskd.c_str(), aTimeout);
+
+    aHandler(error);
+}
+void ThreadHelper::CommissionerJoinerTable(CommJoinerTableHandler aHandler)
+{
+    std::vector<otJoinerInfo> joiners;
+
+    uint16_t     iter = 0;
+    otJoinerInfo joinerInfo;
+
+    while (otCommissionerGetNextJoinerInfo(mInstance, &iter, &joinerInfo) == OT_ERROR_NONE)
+    {
+        joiners.push_back(joinerInfo);
+    }
+
+    aHandler(OT_ERROR_NONE, joiners);
+}
 
 
 void ThreadHelper::MgmtSetResponseHandler(otError aResult, void *aContext)

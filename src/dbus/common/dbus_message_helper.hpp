@@ -59,6 +59,7 @@ otbrError DBusMessageExtract(DBusMessageIter *aIter, ActiveScanResult &aScanResu
 otbrError DBusMessageEncode(DBusMessageIter *aIter, const EnergyScanResult &aResult);
 otbrError DBusMessageExtract(DBusMessageIter *aIter, EnergyScanResult &aResult);
 otbrError DBusMessageEncode(DBusMessageIter *aIter, const PingStatistics &aResult);
+otbrError DBusMessageEncode(DBusMessageIter *aIter, const JoinerInfo &aResult);
 otbrError DBusMessageEncode(DBusMessageIter *aIter, const LinkModeConfig &aConfig);
 otbrError DBusMessageExtract(DBusMessageIter *aIter, LinkModeConfig &aConfig);
 otbrError DBusMessageEncode(DBusMessageIter *aIter, const Ip6Prefix &aPrefix);
@@ -124,6 +125,11 @@ otbrError DBusMessageExtract(DBusMessageIter *aIter, TrelInfo::TrelPacketCounter
 
 template <typename T> struct DBusTypeTrait;
 
+template <> struct DBusTypeTrait<JoinerInfo>
+{
+    // struct of 32 bytes
+    static constexpr const char *TYPE_AS_STRING = "(tsu)";
+};
 template <> struct DBusTypeTrait<IpCounters>
 {
     // struct of 32 bytes

@@ -159,6 +159,10 @@ otbrError DBusThreadObjectRcp::Init(void)
                    std::bind(&DBusThreadObjectRcp::IpAddressesHandler, this, _1));
     RegisterMethod(OTBR_DBUS_THREAD_INTERFACE, OTBR_DBUS_PING_METHOD,
                    std::bind(&DBusThreadObjectRcp::PingHandler, this, _1));
+    RegisterMethod(OTBR_DBUS_THREAD_INTERFACE, OTBR_DBUS_COMMISSIONER_JOINER_ADD_METHOD,
+                   std::bind(&DBusThreadObjectRcp::CommissionerJoinerAddHandler, this, _1));
+    RegisterMethod(OTBR_DBUS_THREAD_INTERFACE, OTBR_DBUS_COMMISSIONER_JOINER_TABLE_METHOD,
+                   std::bind(&DBusThreadObjectRcp::CommissionerJoinerTableHandler, this, _1));
 #if OTBR_ENABLE_BORDER_AGENT
     RegisterMethod(OTBR_DBUS_THREAD_INTERFACE, OTBR_DBUS_UPDATE_VENDOR_MESHCOP_TXT_METHOD,
                    std::bind(&DBusThreadObjectRcp::UpdateMeshCopTxtHandler, this, _1));
@@ -532,6 +536,55 @@ exit:
     }
 }
 
+void DBusThreadObjectRcp::CommissionerJoinerAddHandler(DBusRequest &aRequest)
+{
+    otError              error = OT_ERROR_NONE;
+    std::string          pskd;
+    uint64_t             address;
+    uint32_t             timeout;
+    
+    auto args = std::tie(pskd, address, timeout);
+    VerifyOrExit(DBusMessageToTuple(*aRequest.GetMessage(), args) == OTBR_ERROR_NONE, error = OT_ERROR_INVALID_ARGS);
+
+    mHost.GetThreadHelper()->CommissionerJoinerAdd( pskd, address, timeout,
+        [aRequest](otError error) mutable {
+            
+            aRequest.ReplyOtResult(error);
+        });
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        aRequest.ReplyOtResult(error);
+    }
+}
+
+void DBusThreadObjectRcp::CommissionerJoinerTableHandler(DBusRequest &aRequest)
+{
+    otError              error = OT_ERROR_NONE;
+
+    mHost.GetThreadHelper()->CommissionerJoinerTable([aRequest](otError aError, std::vector<otJoinerInfo> aJoiners) mutable {
+        
+        std::vector<JoinerInfo> joiners;
+        for(int i=0;i<(int)aJoiners.size();i++)
+        {
+            JoinerInfo joiner;
+            joiner.mPskd = aJoiners[i].mPskd.m8;
+            std::reverse(aJoiners[i].mSharedId.mEui64.m8, aJoiners[i].mSharedId.mEui64.m8 + sizeof(joiner.mEui64));
+            memcpy(&joiner.mEui64,aJoiners[i].mSharedId.mEui64.m8,sizeof(joiner.mEui64));
+            joiner.mExpiration = aJoiners[i].mExpirationTime;
+            joiners.push_back(joiner);
+        }
+
+        aRequest.ReplyOtResult<std::vector<JoinerInfo>>(aError, joiners);
+    });
+
+    if (error != OT_ERROR_NONE)
+    {
+        aRequest.ReplyOtResult(error);
+    }
+}
+
 void DBusThreadObjectRcp::DetachHandler(DBusRequest &aRequest)
 {
     aRequest.ReplyOtResult(mHost.GetThreadHelper()->Detach());
@@ -540,7 +593,6 @@ void DBusThreadObjectRcp::DetachHandler(DBusRequest &aRequest)
 void DBusThreadObjectRcp::FactoryResetHandler(DBusRequest &aRequest)
 {
     otError error = OT_ERROR_NONE;
-
     SuccessOrExit(error = mHost.GetThreadHelper()->Detach());
     SuccessOrExit(otInstanceErasePersistentInfo(mHost.GetInstance()));
     mHost.Reset();

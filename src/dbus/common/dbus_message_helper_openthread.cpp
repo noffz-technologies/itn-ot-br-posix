@@ -162,6 +162,23 @@ exit:
     return error;
 }
 
+otbrError DBusMessageEncode(DBusMessageIter *aIter, const JoinerInfo &aResult)
+{
+    DBusMessageIter sub;
+    otbrError       error = OTBR_ERROR_NONE;
+
+    VerifyOrExit(dbus_message_iter_open_container(aIter, DBUS_TYPE_STRUCT, nullptr, &sub), error = OTBR_ERROR_DBUS);
+
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mEui64));
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mPskd));
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mExpiration));
+
+    VerifyOrExit(dbus_message_iter_close_container(aIter, &sub), error = OTBR_ERROR_DBUS);
+
+exit:
+    return error;
+}
+
 otbrError DBusMessageEncode(DBusMessageIter *aIter, const LinkModeConfig &aConfig)
 {
     otbrError       error = OTBR_ERROR_NONE;

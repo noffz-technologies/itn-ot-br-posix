@@ -88,6 +88,13 @@ struct PingStatistics
     bool     mIsMulticast;        ///< Whether this is a multicast ping request.
 };
 
+struct JoinerInfo
+{
+    uint64_t mEui64;        ///< The EUI-64 of the joiner.
+    std::string mPskd;                  ///< The PSKd of the joiner.
+    uint32_t mExpiration;               ///< The expiration time of the joiner in seconds since epoch.
+};
+
 struct LinkModeConfig
 {
     bool mRxOnWhenIdle; ///< 1, if the sender has its receiver on when not transmitting. 0, otherwise.
