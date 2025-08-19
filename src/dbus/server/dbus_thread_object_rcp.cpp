@@ -200,6 +200,8 @@ otbrError DBusThreadObjectRcp::Init(void)
                                std::bind(&DBusThreadObjectRcp::SetDnsUpstreamQueryState, this, _1));
     RegisterSetPropertyHandler(OTBR_DBUS_THREAD_INTERFACE, OTBR_DBUS_PROPERTY_NAT64_CIDR,
                                std::bind(&DBusThreadObjectRcp::SetNat64Cidr, this, _1));
+    RegisterSetPropertyHandler(OTBR_DBUS_THREAD_INTERFACE, OTBR_DBUS_PROPERTY_RADIO_TX_POWER,
+                               std::bind(&DBusThreadObjectRcp::SetRadioTxPowerHandler, this, _1));
 #if OTBR_ENABLE_BORDER_AGENT
     RegisterSetPropertyHandler(OTBR_DBUS_THREAD_INTERFACE, OTBR_DBUS_PROPERTY_EPHEMERAL_KEY_ENABLED,
                                std::bind(&DBusThreadObjectRcp::SetEphemeralKeyEnabled, this, _1));
@@ -1242,6 +1244,19 @@ otError DBusThreadObjectRcp::GetRadioTxPowerHandler(DBusMessageIter &aIter)
     SuccessOrExit(error = otPlatRadioGetTransmitPower(threadHelper->GetInstance(), &txPower));
 
     VerifyOrExit(DBusMessageEncodeToVariant(&aIter, txPower) == OTBR_ERROR_NONE, error = OT_ERROR_INVALID_ARGS);
+
+exit:
+    return error;
+}
+
+otError DBusThreadObjectRcp::SetRadioTxPowerHandler(DBusMessageIter &aIter)
+{
+    auto                     threadHelper = mHost.GetThreadHelper();
+    int8_t                   txpower;
+    otError                  error = OT_ERROR_NONE;
+
+    VerifyOrExit(DBusMessageExtractFromVariant(&aIter, txpower) == OTBR_ERROR_NONE, error = OT_ERROR_INVALID_ARGS);
+    error               = otPlatRadioSetTransmitPower(threadHelper->GetInstance(),txpower);
 
 exit:
     return error;

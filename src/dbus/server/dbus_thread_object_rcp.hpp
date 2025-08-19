@@ -125,6 +125,7 @@ private:
     otError SetRadioRegionHandler(DBusMessageIter &aIter);
     otError SetDnsUpstreamQueryState(DBusMessageIter &aIter);
     otError SetNat64Cidr(DBusMessageIter &aIter);
+    otError SetRadioTxPowerHandler(DBusMessageIter &aIter);
 #if OTBR_ENABLE_BORDER_AGENT
     otError SetEphemeralKeyEnabled(DBusMessageIter &aIter);
 #endif
