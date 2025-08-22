@@ -88,18 +88,39 @@ struct PingStatistics
     bool     mIsMulticast;        ///< Whether this is a multicast ping request.
 };
 
-struct JoinerInfo
-{
-    uint64_t mEui64;        ///< The EUI-64 of the joiner.
-    std::string mPskd;                  ///< The PSKd of the joiner.
-    uint32_t mExpiration;               ///< The expiration time of the joiner in seconds since epoch.
-};
-
 struct LinkModeConfig
 {
     bool mRxOnWhenIdle; ///< 1, if the sender has its receiver on when not transmitting. 0, otherwise.
     bool mDeviceType;   ///< 1, if the sender is an FTD. 0, otherwise.
     bool mNetworkData;  ///< 1, if the sender requires the full Network Data. 0, otherwise.
+};
+struct NetworkDiagChildEntry
+{
+    uint16_t mTimeout;     ///< Expected poll timeout expressed as 2^(Timeout-4) seconds.
+    uint8_t  mLinkQuality; ///< Link Quality In value [0,3]. Zero indicate sender cannot provide link quality info.
+    uint16_t mChildId;     ///< Child ID (derived from child RLOC)
+    LinkModeConfig mMode;    ///< Link mode.
+};
+struct NetworkDiagInfo
+{
+    uint64_t mExtAddress;                    // OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS
+    uint16_t mShortAddress;                  // OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS
+    LinkModeConfig mMode;                   // OT_NETWORK_DIAGNOSTIC_TLV_MODE
+    std::vector<std::vector<uint8_t>> mIp6AddrList; // OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST
+    std::vector<NetworkDiagChildEntry> mChildTable;        // OT_NETWORK_DIAGNOSTIC_TLV_CHILD_TABLE (simplified as byte array)
+    uint64_t mEui64;                         // OT_NETWORK_DIAGNOSTIC_TLV_EUI64
+    uint16_t mVersion;                       // OT_NETWORK_DIAGNOSTIC_TLV_VERSION
+    std::string mVendorName;                 // OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_NAME
+    std::string mVendorModel;                // OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_MODEL
+    std::string mVendorSwVersion;            // OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_SW_VERSION
+    std::string mThreadStackVersion;         // OT_NETWORK_DIAGNOSTIC_TLV_THREAD_STACK_VERSION
+};
+
+struct JoinerInfo
+{
+    uint64_t mEui64;        ///< The EUI-64 of the joiner.
+    std::string mPskd;                  ///< The PSKd of the joiner.
+    uint32_t mExpiration;               ///< The expiration time of the joiner in seconds since epoch.
 };
 
 struct Ip6Prefix

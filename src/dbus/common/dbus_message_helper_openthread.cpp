@@ -161,6 +161,47 @@ otbrError DBusMessageEncode(DBusMessageIter *aIter, const PingStatistics &aResul
 exit:
     return error;
 }
+otbrError DBusMessageEncode(DBusMessageIter *aIter, const NetworkDiagChildEntry &aResult)
+{
+    DBusMessageIter sub;
+    otbrError       error = OTBR_ERROR_NONE;
+
+    VerifyOrExit(dbus_message_iter_open_container(aIter, DBUS_TYPE_STRUCT, nullptr, &sub), error = OTBR_ERROR_DBUS);
+
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mTimeout));
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mLinkQuality));
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mChildId));
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mMode));
+
+    VerifyOrExit(dbus_message_iter_close_container(aIter, &sub), error = OTBR_ERROR_DBUS);
+
+exit:
+    return error;
+}
+otbrError DBusMessageEncode(DBusMessageIter *aIter, const NetworkDiagInfo &aResult)
+{
+    DBusMessageIter sub;
+    otbrError       error = OTBR_ERROR_NONE;
+
+    VerifyOrExit(dbus_message_iter_open_container(aIter, DBUS_TYPE_STRUCT, nullptr, &sub), error = OTBR_ERROR_DBUS);
+
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mExtAddress));
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mShortAddress));
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mMode));
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mIp6AddrList));
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mChildTable));
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mEui64));
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mVersion));
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mVendorName));
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mVendorModel));
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mVendorSwVersion));
+    SuccessOrExit(error = DBusMessageEncode(&sub, aResult.mThreadStackVersion));
+
+    VerifyOrExit(dbus_message_iter_close_container(aIter, &sub), error = OTBR_ERROR_DBUS);
+
+exit:
+    return error;
+}
 
 otbrError DBusMessageEncode(DBusMessageIter *aIter, const JoinerInfo &aResult)
 {

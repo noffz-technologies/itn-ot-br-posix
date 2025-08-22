@@ -159,6 +159,8 @@ otbrError DBusThreadObjectRcp::Init(void)
                    std::bind(&DBusThreadObjectRcp::IpAddressesHandler, this, _1));
     RegisterMethod(OTBR_DBUS_THREAD_INTERFACE, OTBR_DBUS_PING_METHOD,
                    std::bind(&DBusThreadObjectRcp::PingHandler, this, _1));
+    RegisterMethod(OTBR_DBUS_THREAD_INTERFACE, OTBR_DBUS_DIAGNOSTIC_GET_METHOD,
+                   std::bind(&DBusThreadObjectRcp::DiagnosticGetHandler, this, _1));
     RegisterMethod(OTBR_DBUS_THREAD_INTERFACE, OTBR_DBUS_COMMISSIONER_JOINER_ADD_METHOD,
                    std::bind(&DBusThreadObjectRcp::CommissionerJoinerAddHandler, this, _1));
     RegisterMethod(OTBR_DBUS_THREAD_INTERFACE, OTBR_DBUS_COMMISSIONER_JOINER_TABLE_METHOD,
@@ -493,16 +495,17 @@ void DBusThreadObjectRcp::IpAddressesHandler(DBusRequest &aRequest)
 {
     otError              error = OT_ERROR_NONE;
 
-    mHost.GetThreadHelper()->IpAddresses([aRequest](otError error, std::vector<otIp6Address> addresses) mutable {
+    mHost.GetThreadHelper()->IpAddresses([aRequest](otError aError, std::vector<otIp6Address> aAddress) mutable {
         std::vector<std::vector<uint8_t>> ipv6List;
-        for(int i=0;i<(int)addresses.size();i++)
-        {
-            std::vector<uint8_t> ipv6Address;
-            ipv6Address.resize(sizeof(otIp6Address));
-            memcpy(ipv6Address.data(), &addresses[i], sizeof(otIp6Address));
-            ipv6List.push_back(ipv6Address);
-        }
-        aRequest.ReplyOtResult<std::vector<std::vector<uint8_t>>>(error, ipv6List);
+        if(aError == OT_ERROR_NONE)
+            for(int i=0;i<(int)aAddress.size();i++)
+            {
+                std::vector<uint8_t> ipv6Address;
+                ipv6Address.resize(sizeof(otIp6Address));
+                memcpy(ipv6Address.data(), &aAddress[i], sizeof(otIp6Address));
+                ipv6List.push_back(ipv6Address);
+            }
+        aRequest.ReplyOtResult<std::vector<std::vector<uint8_t>>>(aError, ipv6List);
     });
 
     if (error != OT_ERROR_NONE)
@@ -527,8 +530,106 @@ void DBusThreadObjectRcp::PingHandler(DBusRequest &aRequest)
                              [aRequest](otError aError, otPingSenderStatistics aStats) mutable {
                                  
                                 PingStatistics stats;
-                                std::memcpy(&stats, &aStats, sizeof(stats));
+                                if(aError == OT_ERROR_NONE)
+                                    std::memcpy(&stats, &aStats, sizeof(stats));
                                 aRequest.ReplyOtResult<PingStatistics>(aError,stats);
+                             });
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        aRequest.ReplyOtResult(error);
+    }
+}
+
+void DBusThreadObjectRcp::DiagnosticGetHandler(DBusRequest &aRequest)
+{
+    otError error = OT_ERROR_NONE;
+    std::vector<uint8_t> Destination;
+    
+    auto args = std::tie(Destination);
+
+    VerifyOrExit(DBusMessageToTuple(*aRequest.GetMessage(), args) == OTBR_ERROR_NONE, error = OT_ERROR_INVALID_ARGS);
+
+    mHost.GetThreadHelper()->DiagnosticGet(Destination,
+                             [aRequest](otError aError, otMessage *aMessage) mutable {
+                                otNetworkDiagTlv      diagTlv;
+                                otNetworkDiagIterator iterator = OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT;
+                                NetworkDiagInfo       info = {};
+                                while (otThreadGetNextDiagnosticTlv(aMessage, &iterator, &diagTlv) == OT_ERROR_NONE)
+                                {
+                                    switch (diagTlv.mType)
+                                    {
+                                        case OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS:
+                                            std::reverse(diagTlv.mData.mExtAddress.m8, diagTlv.mData.mExtAddress.m8 + sizeof(info.mExtAddress));
+                                            memcpy(&info.mExtAddress, diagTlv.mData.mExtAddress.m8, sizeof(info.mExtAddress));
+                                            break;
+                                        case OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS:
+                                            info.mShortAddress = diagTlv.mData.mAddr16;
+                                            break;
+                                        case OT_NETWORK_DIAGNOSTIC_TLV_MODE:
+                                            info.mMode.mRxOnWhenIdle = diagTlv.mData.mMode.mRxOnWhenIdle;
+                                            info.mMode.mDeviceType = diagTlv.mData.mMode.mDeviceType;
+                                            info.mMode.mNetworkData = diagTlv.mData.mMode.mNetworkData;
+                                            break;
+                                        case OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST:
+                                            info.mIp6AddrList.clear();
+                                            for (uint8_t i = 0; i < diagTlv.mData.mIp6AddrList.mCount; ++i)
+                                            {
+                                                std::vector<uint8_t> addr(diagTlv.mData.mIp6AddrList.mList[i].mFields.m8,
+                                                                        diagTlv.mData.mIp6AddrList.mList[i].mFields.m8 + 16);
+                                                info.mIp6AddrList.push_back(addr);
+                                            }
+                                            break;
+
+                                        case OT_NETWORK_DIAGNOSTIC_TLV_CHILD_TABLE:
+                                            info.mChildTable.clear();
+                                            for (uint8_t i = 0; i < diagTlv.mData.mChildTable.mCount; ++i)
+                                            {
+                                                const auto &entry = diagTlv.mData.mChildTable.mTable[i];
+                                                NetworkDiagChildEntry child;
+                                                child.mTimeout     = entry.mTimeout;
+                                                child.mLinkQuality = entry.mLinkQuality;
+                                                child.mChildId     = entry.mChildId;
+                                                child.mMode.mRxOnWhenIdle = entry.mMode.mRxOnWhenIdle;
+                                                child.mMode.mDeviceType   = entry.mMode.mDeviceType;
+                                                child.mMode.mNetworkData  = entry.mMode.mNetworkData;
+                                                info.mChildTable.push_back(child);
+                                            }
+                                            break;
+
+                                        case OT_NETWORK_DIAGNOSTIC_TLV_EUI64:
+                                            std::reverse(diagTlv.mData.mEui64.m8,
+                                                        diagTlv.mData.mEui64.m8 + sizeof(info.mEui64));
+                                            memcpy(&info.mEui64, diagTlv.mData.mEui64.m8, sizeof(info.mEui64));
+                                            break;
+
+                                        case OT_NETWORK_DIAGNOSTIC_TLV_VERSION:
+                                            info.mVersion = diagTlv.mData.mVersion;
+                                            break;
+
+                                        case OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_NAME:
+                                            info.mVendorName = std::string(diagTlv.mData.mVendorName);
+                                            break;
+
+                                        case OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_MODEL:
+                                            info.mVendorModel = std::string(diagTlv.mData.mVendorModel);
+                                            break;
+
+                                        case OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_SW_VERSION:
+                                            info.mVendorSwVersion = std::string(diagTlv.mData.mVendorSwVersion);
+                                            break;
+
+                                        case OT_NETWORK_DIAGNOSTIC_TLV_THREAD_STACK_VERSION:
+                                            info.mThreadStackVersion = std::string(diagTlv.mData.mThreadStackVersion);
+                                            break;
+
+                                        default:
+                                            otbrLogInfo("Unknown tlv received: %d", diagTlv.mType);
+                                            break;
+                                    }
+                                }
+                                aRequest.ReplyOtResult<NetworkDiagInfo>(aError,info);
                              });
 
 exit:

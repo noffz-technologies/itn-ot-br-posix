@@ -59,6 +59,8 @@ otbrError DBusMessageExtract(DBusMessageIter *aIter, ActiveScanResult &aScanResu
 otbrError DBusMessageEncode(DBusMessageIter *aIter, const EnergyScanResult &aResult);
 otbrError DBusMessageExtract(DBusMessageIter *aIter, EnergyScanResult &aResult);
 otbrError DBusMessageEncode(DBusMessageIter *aIter, const PingStatistics &aResult);
+otbrError DBusMessageEncode(DBusMessageIter *aIter, const NetworkDiagInfo &aResult);
+otbrError DBusMessageEncode(DBusMessageIter *aIter, const NetworkDiagChildEntry &aResult);
 otbrError DBusMessageEncode(DBusMessageIter *aIter, const JoinerInfo &aResult);
 otbrError DBusMessageEncode(DBusMessageIter *aIter, const LinkModeConfig &aConfig);
 otbrError DBusMessageExtract(DBusMessageIter *aIter, LinkModeConfig &aConfig);
@@ -124,10 +126,16 @@ otbrError DBusMessageEncode(DBusMessageIter *aIter, const TrelInfo::TrelPacketCo
 otbrError DBusMessageExtract(DBusMessageIter *aIter, TrelInfo::TrelPacketCounters &aCounters);
 
 template <typename T> struct DBusTypeTrait;
-
+template <> struct DBusTypeTrait<NetworkDiagInfo>
+{
+    static constexpr const char *TYPE_AS_STRING = "(tq(bbb)aaya(qyqbbb)tqssss)";
+};
+template <> struct DBusTypeTrait<NetworkDiagChildEntry>
+{
+    static constexpr const char *TYPE_AS_STRING = "(qyqbbb)";
+};
 template <> struct DBusTypeTrait<JoinerInfo>
 {
-    // struct of 32 bytes
     static constexpr const char *TYPE_AS_STRING = "(tsu)";
 };
 template <> struct DBusTypeTrait<IpCounters>

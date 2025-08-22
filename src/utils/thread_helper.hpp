@@ -51,6 +51,7 @@
 #include <openthread/joiner.h>
 #include <openthread/ping_sender.h>
 #include <openthread/netdata.h>
+#include <openthread/netdiag.h>
 #include <openthread/thread.h>
 #include "mdns/mdns.hpp"
 #if OTBR_ENABLE_TELEMETRY_DATA_API
@@ -80,6 +81,7 @@ public:
     using AttachHandler           = std::function<void(otError, int64_t)>;
     using IpAddressesHandler      = std::function<void(otError, const std::vector<otIp6Address> &)>;
     using PingHandler             = std::function<void(otError, otPingSenderStatistics)>;
+    using DiagnosticHandler       = std::function<void(otError, otMessage *)>;
     using CommJoinerAddHandler    = std::function<void(otError)>;
     using CommJoinerTableHandler  = std::function<void(otError, const std::vector<otJoinerInfo> &)>;
     using UpdateMeshCopTxtHandler = std::function<void(std::map<std::string, std::vector<uint8_t>>)>;
@@ -192,11 +194,13 @@ public:
     void AttachAllNodesTo(const std::vector<uint8_t> &aDatasetTlvs, AttachHandler aHandler);
 
     void IpAddresses(IpAddressesHandler aHandler);
-
-    void Ping(uint16_t aCount, std::vector<uint8_t> aDestination, uint16_t aSize, uint16_t aTimeout, PingHandler aHandler);
     
     static void PingStatisticsCallback(const otPingSenderStatistics *stats, void *context);
-    
+    void Ping(uint16_t aCount, std::vector<uint8_t> aDestination, uint16_t aSize, uint16_t aTimeout, PingHandler aHandler);
+
+    static void HandleDiagnosticGetResponse(otError aError, otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext);
+    void DiagnosticGet(std::vector<uint8_t> aDestination, DiagnosticHandler aHandler);
+
     void CommissionerJoinerAdd(std::string aPskd, uint64_t aAddress, uint32_t aTimeout, CommJoinerAddHandler aHandler);
     
     void CommissionerJoinerTable(CommJoinerTableHandler aHandler);

@@ -840,6 +840,73 @@ void ThreadHelper::Ping(uint16_t aCount, std::vector<uint8_t> aDestination, uint
         aHandler(error, otPingSenderStatistics{});
     }
 }
+void ThreadHelper::HandleDiagnosticGetResponse(otError aError,otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext)
+{
+    // Cast context back to your handler pointer
+    auto handler = static_cast<DiagnosticHandler *>(aContext);
+    OT_UNUSED_VARIABLE(aMessageInfo);
+    if (handler)
+    {
+        // Call the stored handler
+        (*handler)(aError, aMessage);
+        // Cleanup: delete handler pointer to avoid memory leak
+        delete handler;
+    }
+}
+
+void ThreadHelper::DiagnosticGet(std::vector<uint8_t> aDestination, DiagnosticHandler aHandler)
+{
+    otError error = OT_ERROR_NONE;
+    const uint8_t tlvValues[] = {
+        0,  // OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS
+        1,  // OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS
+        2,  // OT_NETWORK_DIAGNOSTIC_TLV_MODE
+        //3,  // OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT
+        //4,  // OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY
+        //5,  // OT_NETWORK_DIAGNOSTIC_TLV_ROUTE
+        //6,  // OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA
+        //7,  // OT_NETWORK_DIAGNOSTIC_TLV_NETWORK_DATA
+        8,  // OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST
+        //9,  // OT_NETWORK_DIAGNOSTIC_TLV_MAC_COUNTERS
+        //14, // OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL
+        //15, // OT_NETWORK_DIAGNOSTIC_TLV_SUPPLY_VOLTAGE
+        16, // OT_NETWORK_DIAGNOSTIC_TLV_CHILD_TABLE
+        //17, // OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES
+        //18, // OT_NETWORK_DIAGNOSTIC_TLV_TYPE_LIST
+        //19, // OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT
+        23, // OT_NETWORK_DIAGNOSTIC_TLV_EUI64
+        24, // OT_NETWORK_DIAGNOSTIC_TLV_VERSION
+        25, // OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_NAME
+        26, // OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_MODEL
+        27, // OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_SW_VERSION
+        28 // OT_NETWORK_DIAGNOSTIC_TLV_THREAD_STACK_VERSION
+        //29, // OT_NETWORK_DIAGNOSTIC_TLV_CHILD
+        //30, // OT_NETWORK_DIAGNOSTIC_TLV_CHILD_IP6_ADDR_LIST
+        //31, // OT_NETWORK_DIAGNOSTIC_TLV_ROUTER_NEIGHBOR
+        //32, // OT_NETWORK_DIAGNOSTIC_TLV_ANSWER
+        //33, // OT_NETWORK_DIAGNOSTIC_TLV_QUERY_ID
+        //34, // OT_NETWORK_DIAGNOSTIC_TLV_MLE_COUNTERS
+        //35, // OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_APP_URL
+        //36, // OT_NETWORK_DIAGNOSTIC_TLV_NON_PREFERRED_CHANNELS
+        //37  // OT_NETWORK_DIAGNOSTIC_TLV_ENHANCED_ROUTE
+    };
+    size_t tlvLength = sizeof(tlvValues) / sizeof(tlvValues[0]);
+
+    // Allocate the handler on heap; will be deleted in the callback
+    DiagnosticHandler *handlerPtr = new DiagnosticHandler(std::move(aHandler));
+
+    otIp6Address address;
+    memcpy(&address.mFields.m8, aDestination.data(), sizeof(address.mFields.m8));
+
+    error = otThreadSendDiagnosticGet(mInstance, &address, tlvValues, tlvLength, &HandleDiagnosticGetResponse, handlerPtr);
+
+    if (error != OT_ERROR_NONE)
+    {
+        delete handlerPtr;
+        aHandler(error, nullptr);
+    }
+}
+
 void ThreadHelper::CommissionerJoinerAdd(std::string aPskd, uint64_t aAddress, uint32_t aTimeout, CommJoinerAddHandler aHandler)
 {
     otError error = OT_ERROR_NONE;
